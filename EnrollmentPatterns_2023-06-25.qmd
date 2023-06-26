@@ -1,0 +1,99 @@
+---
+title: "Northern Arizona Enrollment Patterns"
+author: "John Ryan Kivela, MA"
+format: html
+editor: visual
+---
+```{r}
+
+#| setup
+
+library(tidyverse)
+library(readxl)
+library(sf)
+library(leaflet)
+library(viridis)
+
+```
+
+OK where to start
+
+Well, we need enrollment data. So that means the master global members file from the APR...
+
+```{r}
+
+GlblMembers <- read_xlsx("./data/data_original_glblmbrs_2023-05-01_globalMembersRoster.xlsx", sheet = "Sheet1")
+
+```
+
+And we will need zip codes"
+
+```{r}
+
+NAZZipCodes <- read.csv("./data/NorthernArizonaZipCodes.csv")
+
+library(maps)
+library(choroplethr)
+library(choroplethrZip)
+library(choroplethrMaps)
+
+ZipDatabase <- read.csv("./data/zip_code_database.csv")
+
+AZ_County <- (c("Apache County", "Coconino County", "Mohave County", 
+                "Navajo County", "Yavapai County"))
+
+AZ_County_Map <- (c("Apache", "Coconino", "Mohave", 
+                    "Navajo", "Yavapai"))
+
+#Northern Arizona Map Tables
+NAZ_Zips <- ZipDatabase %>% 
+  filter(county %in% AZ_County) %>% 
+  select(zip)
+
+Vec_AZ_Zips <- NAZ_Zips$zip
+
+# Create objects for County map
+
+data("county.map")
+
+countyref <- county.map %>% 
+  filter(NAME %in% AZ_County_Map)
+
+Pop_Zip <- GlblMembers %>% 
+  group_by(zipCode) %>% 
+  count(zipCode) %>% 
+  rename(value = n, region = zipCode)
+
+# Choropleth Map
+
+zip_choropleth(Pop_Zip, 
+               num_colors = 1,
+               state_zoom = "arizona",
+               title      = "Alliance Member Residence by ZipCode",
+               legend     = "Population"
+               ) + 
+  scale_fill_gradient2(
+    low = "#e8bbfc",
+    mid = "#f688ee",
+    high = "#9a0138",
+    na.value = "#FFFFFF")+
+  geom_polygon(data = countyref,
+               aes(x = long, y = lat, group = group), 
+               alpha = 0, 
+               color = "#000775", 
+               linewidth
+               = 0.5)
+
+```
+
+```{r}
+# Load shapefile
+shapefile <- read_sf("./data/tl_rd22_04025_edges.shp")
+
+```
+
+```{r}
+
+
+
+```
